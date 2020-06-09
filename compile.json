@@ -1,0 +1,56 @@
+{
+  "$schema": "https://qooxdoo.org/schema/compile-1-0-0.json",
+  "environment": {
+    "qx.serve.appspath": "/apps/",
+    "qx.serve.docspath": "/"
+  },
+  "targets": [
+    {
+      "type": "build",
+      "outputPath": "compiled/build"
+    }
+  ],
+  "defaultTarget": "build",
+  "locales": [
+    "en"
+  ],
+  "ignores": [
+    "module.*",
+    "process.*",
+    "Promise.*",
+    "require.*",
+    "path.*",
+    "args.*"
+  ],
+  "libraries": [
+    "./framework"
+  ],
+  "applications": [
+    {
+      "class": "qxl.apiviewer.Application",
+      "theme": "qxl.apiviewer.Theme",
+      "name": "apiviewer",
+      "title": "Qooxdoo compiler API",
+      "default": true,
+      "environment": {
+        "qx.icontheme": "Tango",
+        "excludeFromAPIViewer": [
+          "qxl.*",
+          "qxWeb"
+        ]
+      },
+      "include": [
+        "qx.*",
+        "qxl.*"
+      ],
+      "exclude": [
+        "qx.test.*",
+        "qx.module.Blocker",
+        "qx.module.Placement",
+        "qx.tool.compiler.util",
+        "qx.ui.website.*",
+        "*.index"
+      ]
+    }
+  ]
+}

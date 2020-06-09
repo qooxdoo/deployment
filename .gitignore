@@ -1,2 +1,13 @@
-# ides
-.idea/
+# IDEs
+/.idea/
+
+# node
+/node_modules/
+
+# repos
+/framework/
+/compiler/
+
+# build
+/compiled/
+/html/

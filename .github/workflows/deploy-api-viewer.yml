@@ -1,11 +1,13 @@
-name: Deploy to NPM
+name: Deploy to API viewer
 
 on:
+  push:
+    branches: [ master ]
   # nightly job
-  schedule:
-    - cron: '0 12 * * *'
+  #schedule:
+  #  - cron: '0 12 * * *'
   # triggered by repo
-  repository_dispatch:
+  #repository_dispatch:
 
 jobs:
 
@@ -13,8 +15,21 @@ jobs:
     name: Deploy API Viewer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - run: npm ci
+      - name: Checkout framework
+        uses: actions/checkout@v2
+        with:
+          repository: 'qooxdoo/qooxdoo'
+          path: framework
+
+      - name: Checkout framework
+        uses: actions/checkout@v2
+        with:
+          repository: 'qooxdoo/qooxdoo-compiler'
+          path: compiler
+
+      - name: Create unified codebase
+        run: cp -rf compiler/source/{class,resource}/qx/tool framework/source/{class,resource}/qx/
+
       - name: Build API Viewer
         run: ./qx deploy --out=./html --source-maps
       - name: Deploy API Viewer
