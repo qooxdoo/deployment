@@ -1,0 +1,24 @@
+name: Deploy to NPM
+
+on:
+  # nightly job
+  schedule:
+    - cron: '0 12 * * *'
+  # triggered by repo
+  repository_dispatch:
+
+jobs:
+
+  deploy:
+    name: Deploy API Viewer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm ci
+      - name: Build API Viewer
+        run: ./qx deploy --out=./html --source-maps
+      - name: Deploy API Viewer
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./html
