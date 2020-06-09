@@ -15,20 +15,20 @@ jobs:
     name: Deploy API Viewer
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout framework
+      - name: Checking out framework
         uses: actions/checkout@v2
         with:
           repository: 'qooxdoo/qooxdoo'
-          path: framework
+          path: qooxdoo
 
-      - name: Checkout framework
+      - name: Checking out compiler
         uses: actions/checkout@v2
         with:
           repository: 'qooxdoo/qooxdoo-compiler'
           path: compiler
 
       - name: Create unified codebase
-        run: cp -rf compiler/source/{class,resource}/qx/tool framework/source/{class,resource}/qx/
+        run: cp -rf compiler/source/{class,resource}/qx/tool qooxdoo/framework/source/{class,resource}/qx/
 
       - name: Build API Viewer
         run: ./qx deploy --out=./html --source-maps
