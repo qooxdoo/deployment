@@ -2,7 +2,7 @@
 
 This repo contains experimental code to separate the release and deployment
 workflow from the development workflow. The idea is that tests run in the
-codebase repositories and ensure quality and itegrity of the the code. When
+codebase repositories and ensure quality and integrity of the the code. When
 they pass, they send a `repository_dispatch` event to this repo to trigger
 deployment, which then runs its own workflow to test release and deployment
 prerequisites. If these tests fail, deployment/release is prevented, but without
@@ -19,6 +19,6 @@ Discussion: https://github.com/qooxdoo/qooxdoo/issues/10005
 - https://github.com/marketplace/actions/repository-dispatch
 - https://semantic-release.gitbook.io/semantic-release/
 - https://www.conventionalcommits.org/en/v1.0.0/
-- https://github.com/conventional-changelog/commitlint#what-is-commitlint)
-- https://github.com/semantic-release/semantic-release/blob/ef1b8a0b910b81070a600c8c772434ec345812dd/docs/recipes/pre-releases.md#working-on-a-future-release
+- https://github.com/conventional-changelog/commitlint#what-is-commitlint
+- https://github.com/semantic-release/semantic-release/blob/master/docs/recipes/pre-releases.md#working-on-a-future-release
 - https://github.com/marketplace/actions/action-for-semantic-release
