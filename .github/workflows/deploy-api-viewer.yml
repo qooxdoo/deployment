@@ -27,11 +27,15 @@ jobs:
           repository: 'qooxdoo/qooxdoo-compiler'
           path: compiler
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Create unified codebase
         run: cp -rf compiler/source/{class,resource}/qx/tool qooxdoo/framework/source/{class,resource}/qx/
 
       - name: Build API Viewer
-        run: ./qx deploy --out=./html --source-maps
+        run: compiler/qx deploy --out=./html --source-maps
+
       - name: Deploy API Viewer
         uses: peaceiris/actions-gh-pages@v3
         with:
