@@ -1,7 +1,5 @@
 # Qooxdoo releases & deployment
 
-**NOTE ** This depends on the PR at https://github.com/qooxdoo/qooxdoo-compiler/pull/721
-
 This repo contains experimental code to separate the release and deployment
 workflow from the development workflow. The idea is that tests run in the
 codebase repositories and ensure quality and integrity of the the code. When
