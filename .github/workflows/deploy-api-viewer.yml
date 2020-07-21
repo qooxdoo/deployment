@@ -21,8 +21,8 @@ jobs:
 
       - name: Build API Viewer with compiler
         run: |
-        cd working/repos/qxl.apiviewer
-        ../../bin/qx deploy --out=../../../html --source-maps
+          cd working/repos/qxl.apiviewer
+          ../../bin/qx deploy --out=../../../html --source-maps
 
       - name: Deploy API Viewer
         uses: peaceiris/actions-gh-pages@v3
