@@ -9,9 +9,12 @@ prerequisites. If these tests fail, deployment/release is prevented, but without
 affecting development workflows. The failure can then be addressed in the
 codebase repos.
 
-The code in this repo is designed to be used on any *nux based workstation - it
-will hopefully be possible to run them on Bash for Windows 10, but that has not
-been tested.
+The code in this repo is designed to be used on any *nux based
+workstation - it will hopefully be possible to run them on Bash for
+Windows 10, but that has not been tested. On Mac OS, you need to use or
+[install](https://itnext.io/upgrading-bash-on-macos-7138bd1066ba) a newer Bash
+shell (>=v4) than the one shipped with the OS; the most straighforward way is
+to use Homebrew and do `brew install bash`, which will give you version 5.
 
 To run compilation, just try: 
 

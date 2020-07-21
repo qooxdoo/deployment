@@ -1,5 +1,5 @@
-name: Deploy to API viewer
-
+name: Deploy API viewer with integrated namespace
+# This is just a test, will be removed
 on:
   push:
     branches: [ master ]
@@ -16,29 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Checking out deployment repo
-        uses: actions/checkout@v2
+      - name: Install & build compiler
+        run: ./deployer.sh --verbose
 
-      - name: Checking out framework
-        uses: actions/checkout@v2
-        with:
-          repository: 'qooxdoo/qooxdoo'
-          path: qooxdoo
-
-      - name: Checking out compiler
-        uses: actions/checkout@v2
-        with:
-          repository: 'qooxdoo/qooxdoo-compiler'
-          path: compiler
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Create unified codebase
-        run: cp -rf compiler/source/{class,resource}/qx/tool qooxdoo/framework/source/{class,resource}/qx/
-
-      - name: Build API Viewer
-        run: compiler/qx deploy --out=./html --source-maps
+      - name: Build API Viewer with compiler
+        run: |
+        cd working/repos/qxl.apiviewer
+        ../../bin/qx deploy --out=../../../html --source-maps
 
       - name: Deploy API Viewer
         uses: peaceiris/actions-gh-pages@v3
