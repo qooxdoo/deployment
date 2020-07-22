@@ -199,13 +199,13 @@ function bootstrapCompiler {
         verbose "Recompiling framework with the compiler..."
         rm -rf $frameworkRepoDir/bootstrap
         pushDirSafe $frameworkRepoDir
-        qx compile $QX_COMPILE_ARGS --config-file compile-server.json --output-path-prefix=bootstrap
+        $WORKING_ABS_DIR/bin/qx compile $QX_COMPILE_ARGS --config-file compile-server.json --output-path-prefix=bootstrap
         rm -rf lib
         mv bootstrap/lib .
         rmdir bootstrap
 
         verbose "Second recompile of framework with the compiler using the new framework..."
-        qx compile $QX_COMPILE_ARGS --config-file compile-server.json --output-path-prefix=bootstrap
+        $WORKING_ABS_DIR/bin/qx compile $QX_COMPILE_ARGS --config-file compile-server.json --output-path-prefix=bootstrap
         rm -rf lib
         mv bootstrap/lib .
         rmdir bootstrap
@@ -250,7 +250,7 @@ for repo in $ENABLED_REPOS ; do
     [[ $repo == "qooxdoo" || $repo == "qooxdoo-compiler" ]] && continue
     repoDir=${REPO_DIRS[$repo]}
     pushDirSafe $repoDir
-    qx compile $QX_COMPILE_ARGS
+    $WORKING_ABS_DIR/bin/qx compile $QX_COMPILE_ARGS
     popDir
 done
 
