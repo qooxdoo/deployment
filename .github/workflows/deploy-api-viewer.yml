@@ -19,7 +19,9 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install & build compiler
-        run: ./deployer.sh --verbose
+        run: |
+          npm ci
+          ./deployer.sh --verbose
 
       - name: Build API Viewer with compiler
         run: |
