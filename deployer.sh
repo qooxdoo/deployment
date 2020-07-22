@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-
 # Preset default command line args
+QX_CMD="npx qx"
 ANSWER_YES=0
 PULL_ALL=1
 RESET_NPM=0
@@ -38,6 +38,11 @@ while [[ $1 != "" ]] ; do
     case "$1" in
         "--enable-repos")
             LOCAL_ENABLE_REPOS="$2"
+            shift
+            ;;
+
+        "--qx-cmd"|"-q")
+            QX_CMD="$2"
             shift
             ;;
 
@@ -79,6 +84,7 @@ done
 if [[ $USAGE != 0 ]] ; then
     echo "Usage: $0 [options]"
     echo "where options are:"
+    echo "  --qx-cmd, q command         - the qx command used for bootstrapping, defaults to 'npx qx'"
     echo "  --enable-repos [list]       - exhaustive list of repos to enable, space separated in quotes"
     echo "  --pull-all, -p              - force a pull from all repos"
     echo "  --reset-npm, -r             - erase and reinstall node_modules in all repos"
@@ -146,7 +152,7 @@ done
 function bootstrapFramework {
     verbose "Bootstrapping the framework..."
     checkoutRepo "qooxdoo"
-    checkRepoNodeModules "qooxdoo-compiler"
+#    checkRepoNodeModules "qooxdoo"
 }
 bootstrapFramework
 
@@ -162,56 +168,34 @@ function bootstrapCompiler {
     if [[ $BUILD_TARGET != 0 ]] ; then
         QX_COMPILE_ARGS="$QX_COMPILE_ARGS --target=build"
     fi
+	
+    if [[ $VERBOSE != 0 ]] ; then
+        QX_COMPILE_ARGS="$QX_COMPILE_ARGS --verbose"
+    fi
+
+    # Setup the compiler / working bin directory
+    if [[ ! -f $WORKING_ABS_DIR/bin/qx ]] ; then
+        mkdir -p $WORKING_ABS_DIR/bin
+        ln -s ${REPO_ABS_DIRS[qooxdoo-compiler]}/bin/qx $WORKING_ABS_DIR/bin
+    fi
 
     local frameworkRepoDir=${REPO_ABS_DIRS["qooxdoo"]}
     local compilerRepoDir=${REPO_ABS_DIRS["qooxdoo-compiler"]}
 
-    # If the compiler is not linked to our framework, then we need to switch it over and
-    #   check that the framework can be recompiled, using the compiler which is using our
-    #   framework...
-    if [[ ! -L $compilerRepoDir/node_modules/@qooxdoo/framework ]] ; then
-        verbose "Installing locally compiled framework into the compiler..."
+    # If the compiler is not linked to our framework, then we need to switch it over
+    if [[ ! -L $compilerRepoDir/node_modules/@qooxdoo/framework/ ]] ; then
+        verbose "Installing locally framework source into the compiler..."
         rm -rf $compilerRepoDir/node_modules/@qooxdoo/framework
-        ln -s $frameworkRepoDir $compilerRepoDir/node_modules/@qooxdoo/framework
+        mkdir -p $compilerRepoDir/node_modules/@qooxdoo/framework
+        ln -s $frameworkRepoDir/framework/source $compilerRepoDir/node_modules/@qooxdoo/framework/source
+        ln -s $frameworkRepoDir/Manifest.json $compilerRepoDir/node_modules/@qooxdoo/framework/Manifest.json
+        ln -s $frameworkRepoDir/package.json $compilerRepoDir/node_modules/@qooxdoo/framework/package.json
     fi
 
     verbose "build the compiler from repo"
     pushDirSafe $compilerRepoDir
-    npx qx deploy
-
-    verbose "install the compiler global"
-    npm link
+    $QX_CMD deploy $QX_COMPILE_ARGS
     popDir
-
-    verbose "compile framework"
-    pushDirSafe $frameworkRepoDir
-    qx compile $QX_COMPILE_ARGS --config-file compile.json
-
-return
-
-    # If the compiler is not linked to our framework, then we need to switch it over and
-    #   check that the framework can be recompiled, using the compiler which is using our
-    #   framework...
-    if [[ ! -L $compilerRepoDir/node_modules/@qooxdoo/framework ]] ; then
-        verbose "Installing locally compiled framework into the compiler..."
-        rm -rf $compilerRepoDir/node_modules/@qooxdoo/framework
-        ln -s $frameworkRepoDir $compilerRepoDir/node_modules/@qooxdoo/framework
-
-        verbose "Compiling Recompiling framework with the compiler..."
-        rm -rf $frameworkRepoDir/bootstrap
-        pushDirSafe $frameworkRepoDir
-        qx compile $QX_COMPILE_ARGS --config-file compile-server.json --output-path-prefix=bootstrap
-        rm -rf lib
-        mv bootstrap/lib .
-        rmdir bootstrap
-
-        verbose "Second recompile of framework with the compiler using the new framework..."
-        qx compile $QX_COMPILE_ARGS --config-file compile-server.json --output-path-prefix=bootstrap
-        rm -rf lib
-        mv bootstrap/lib .
-        rmdir bootstrap
-        popDir
-    fi
 }
 bootstrapCompiler
 
@@ -252,7 +236,7 @@ for repo in $ENABLED_REPOS ; do
     [[ $repo == "qooxdoo" || $repo == "qooxdoo-compiler" ]] && continue
     repoDir=${REPO_DIRS[$repo]}
     pushDirSafe $repoDir
-    qx compile $QX_COMPILE_ARGS
+    $WORKING_ABS_DIR/bin/qx compile $QX_COMPILE_ARGS
     popDir
 done
 
