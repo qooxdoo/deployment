@@ -17,7 +17,7 @@ jobs:
     steps:
 
       - name: Install & build compiler
-        run: ./deployer.sh --verbose
+        run: pwd && ls -al && ./deployer.sh --verbose
 
       - name: Build API Viewer with compiler
         run: |
