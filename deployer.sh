@@ -195,7 +195,7 @@ function bootstrapCompiler {
 
     verbose "build the compiler from repo"
     pushDirSafe $compilerRepoDir
-    $QX_CMD deploy $QX_COMPILE_ARGS
+    $QX_CMD deploy $QX_COMPILE_ARGS --app-name=compiler
     popDir
 }
 bootstrapCompiler
