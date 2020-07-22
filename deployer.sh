@@ -188,8 +188,8 @@ function bootstrapCompiler {
         rm -rf $compilerRepoDir/node_modules/@qooxdoo/framework
         mkdir -p $compilerRepoDir/node_modules/@qooxdoo/framework
         ln -s $frameworkRepoDir/framework/source $compilerRepoDir/node_modules/@qooxdoo/framework/source
-        ln -s $frameworkRepoDir/Manifest.json $compilerRepoDir/node_modules/@qooxdoo/framework/Manifest.json
-        ln -s $frameworkRepoDir/package.json $compilerRepoDir/node_modules/@qooxdoo/framework/package.json
+        ln $frameworkRepoDir/Manifest.json $compilerRepoDir/node_modules/@qooxdoo/framework/Manifest.json
+        ln $frameworkRepoDir/package.json  $compilerRepoDir/node_modules/@qooxdoo/framework/package.json
     fi
 
     verbose "build the compiler from repo"
