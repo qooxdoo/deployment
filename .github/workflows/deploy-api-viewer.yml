@@ -16,8 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+      - uses: actions/checkout@v2
+
       - name: Install & build compiler
-        run: pwd && ls -al && ./deployer.sh --verbose
+        run: ./deployer.sh --verbose
 
       - name: Build API Viewer with compiler
         run: |
