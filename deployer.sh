@@ -3,6 +3,7 @@ set -e
 
 
 # Preset default command line args
+QX_CMD="npx qx"
 ANSWER_YES=0
 PULL_ALL=1
 RESET_NPM=0
@@ -38,6 +39,11 @@ while [[ $1 != "" ]] ; do
     case "$1" in
         "--enable-repos")
             LOCAL_ENABLE_REPOS="$2"
+            shift
+            ;;
+
+        "--qx-cmd"|"-q")
+            QX_CMD="$2"
             shift
             ;;
 
@@ -79,6 +85,7 @@ done
 if [[ $USAGE != 0 ]] ; then
     echo "Usage: $0 [options]"
     echo "where options are:"
+    echo "  --qx-cmd, q command         - the qx command used for bootstrapping, defaults to 'npx qx'"
     echo "  --enable-repos [list]       - exhaustive list of repos to enable, space separated in quotes"
     echo "  --pull-all, -p              - force a pull from all repos"
     echo "  --reset-npm, -r             - erase and reinstall node_modules in all repos"
@@ -154,7 +161,7 @@ function bootstrapFramework {
 
     local repoDir=${REPO_DIRS["qooxdoo"]}
     pushDirSafe $repoDir
-    qx compile $QX_COMPILE_ARGS --config-file compile-server.json
+    $QX_CMD compile $QX_COMPILE_ARGS --config-file compile-server.json
     popDir
 }
 bootstrapFramework
