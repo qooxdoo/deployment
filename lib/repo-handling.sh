@@ -22,7 +22,7 @@ function checkoutRepo {
     if [[ ! -d $repoDir ]] ; then
         echo "Cloning $repoUrl ..."
         created=true
-        git clone $repoUrl $repoDir
+        git clone $repoUrl $repoDir --depth 5
     else
         if isWorking $repoDir ; then
             if [[ $PULL_ALL ]] ; then
