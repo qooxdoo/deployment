@@ -8,21 +8,21 @@
 # Checks out a repo
 #
 # @param repo {String} name of the repo
-# 
+#
 function checkoutRepo {
     local repo=$1
-    
+
     # Get values (and validate the _config.sh associative arrays)
     local repoDir=${REPO_DIRS[$repo]}
     [[ $repoDir == "" ]] && errorExit "Cannot find an entry in REPO_DIRS for $repo"
     local repoUrl=${REPO_URLS[$repo]}
     [[ $repoUrl == "" ]] && errorExit "Cannot find an entry in REPO_URLS for $repo"
-    
+
     local created=false
     if [[ ! -d $repoDir ]] ; then
         echo "Cloning $repoUrl ..."
         created=true
-        git clone $repoUrl $repoDir
+        git clone $repoUrl $repoDir --depth 1
     else
         if isWorking $repoDir ; then
             if [[ $PULL_ALL ]] ; then
@@ -33,7 +33,7 @@ function checkoutRepo {
             fi
         fi
     fi
-    
+
     repoDir=$(makeAbsolute $repoDir)
     REPO_ABS_DIRS[$repo]=$repoDir
     if isWorking $repoDir ; then
@@ -53,12 +53,12 @@ function checkoutRepo {
 # @param repo {String} repo name
 function checkRepoNodeModules {
     local repo=$1
-    
+
     local repoDir=${REPO_DIRS[$repo]}
-    
+
     if [[ -f $repoDir/package.json ]] ; then
         pushDirSafe $repoDir
-        [[ $RESET_NPM == 1 ]] && rm -rf node_modules   
+        [[ $RESET_NPM == 1 ]] && rm -rf node_modules
         [[ ! -d node_modules ]] && npm install
         popDir
     fi

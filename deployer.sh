@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-
 # Preset default command line args
 QX_CMD="npx qx"
 ANSWER_YES=0
@@ -180,9 +179,9 @@ function bootstrapCompiler {
     fi
 
     # Setup the compiler / working bin directory
-    if [[ ! -L $WORKING_ABS_DIR/bin/qx ]] ; then
+    if [[ ! -f $WORKING_ABS_DIR/bin/qx ]] ; then
         mkdir -p $WORKING_ABS_DIR/bin
-        ln -s ${REPO_ABS_DIRS[qooxdoo-compiler]}/qx $WORKING_ABS_DIR/bin
+        ln -s ${REPO_ABS_DIRS[qooxdoo-compiler]}/bin/qx $WORKING_ABS_DIR/bin
     fi
 
     local frameworkRepoDir=${REPO_ABS_DIRS["qooxdoo"]}
