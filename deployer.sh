@@ -188,6 +188,7 @@ function bootstrapCompiler {
         rm -rf $compilerRepoDir/node_modules/@qooxdoo/framework
         mkdir -p $compilerRepoDir/node_modules/@qooxdoo/framework
         ln -s $frameworkRepoDir/framework/source $compilerRepoDir/node_modules/@qooxdoo/framework/source
+        # we need a hard link here - node do not follow the sym links and resolves the wrong directory
         ln $frameworkRepoDir/Manifest.json $compilerRepoDir/node_modules/@qooxdoo/framework/Manifest.json
         ln $frameworkRepoDir/package.json  $compilerRepoDir/node_modules/@qooxdoo/framework/package.json
     fi
