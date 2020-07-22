@@ -109,6 +109,14 @@ if [[ $CLEAN != 0 ]] ; then
     QX_COMPILE_ARGS="$QX_COMPILE_ARGS --clean"
 fi
 
+if [[ $BUILD_TARGET != 0 ]] ; then
+    QX_COMPILE_ARGS="$QX_COMPILE_ARGS --target=build"
+fi
+
+if [[ $VERBOSE != 0 ]] ; then
+    QX_COMPILE_ARGS="$QX_COMPILE_ARGS --verbose"
+fi
+
 
 # Initialise the working directory
 mkdir -p $WORKING_DIR
@@ -164,14 +172,6 @@ function bootstrapCompiler {
     verbose "Bootstrapping the compiler..."
     checkoutRepo "qooxdoo-compiler"
     checkRepoNodeModules "qooxdoo-compiler"
-
-    if [[ $BUILD_TARGET != 0 ]] ; then
-        QX_COMPILE_ARGS="$QX_COMPILE_ARGS --target=build"
-    fi
-	
-    if [[ $VERBOSE != 0 ]] ; then
-        QX_COMPILE_ARGS="$QX_COMPILE_ARGS --verbose"
-    fi
 
     # Setup the compiler / working bin directory
     if [[ ! -f $WORKING_ABS_DIR/bin/qx ]] ; then
@@ -232,12 +232,12 @@ for repo in $ENABLED_REPOS ; do
 done
 
 
-# Compile repos
+# Compile and test repos
 for repo in $ENABLED_REPOS ; do
     [[ $repo == "qooxdoo" || $repo == "qooxdoo-compiler" ]] && continue
     repoDir=${REPO_DIRS[$repo]}
     pushDirSafe $repoDir
-    $WORKING_ABS_DIR/bin/qx compile $QX_COMPILE_ARGS
+    $WORKING_ABS_DIR/bin/qx test $QX_COMPILE_ARGS
     popDir
 done
 
