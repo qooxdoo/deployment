@@ -25,11 +25,14 @@ function checkoutRepo {
         git clone $repoUrl $repoDir --depth 5
     else
         if isWorking $repoDir ; then
-            if [[ $PULL_ALL ]] ; then
-                echo "Updating $repoUrl ..."
+            if [[ $PULL_ALL != 0 ]] ; then
+                echo "Updating $repo ..."
                 pushDirSafe $repoDir
+                git config pull.rebase false
                 git pull
                 popDir
+            else
+                echo "Not updating $repo because you have it in your own directory ($repoDir)..."
             fi
         fi
     fi
@@ -48,12 +51,11 @@ function checkoutRepo {
 
 
 ##
-# Checks a repos node_modules, optionally hard resetting them if neceessary
+# Checks a repos node_modules, optionally hard resetting them if necessary
 #
 # @param repo {String} repo name
 function checkRepoNodeModules {
     local repo=$1
-    
     local repoDir=${REPO_DIRS[$repo]}
     
     if [[ -f $repoDir/package.json ]] ; then

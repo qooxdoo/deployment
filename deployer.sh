@@ -2,7 +2,6 @@
 set -e
 
 # Preset default command line args
-QX_CMD="npx qx"
 ANSWER_YES=0
 PULL_ALL=1
 RESET_NPM=0
@@ -10,6 +9,7 @@ BUILD_TARGET=1
 CLEAN=0
 RUN_TESTS=1
 VERBOSE=0
+QUIET=0
 USAGE=0
 
 
@@ -21,10 +21,13 @@ DEPLOY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 declare -A REPO_ABS_DIRS
 declare -A REPO_IS_WORKING
 QX_COMPILE_ARGS=
+KNOWN_GOOD_QX_CMD=./node_modules/@qooxdoo/compiler/qx
+
 
 # Load utility methods
 . ./lib/utils.sh
 . ./lib/repo-handling.sh
+
 
 # Load configs
 . ./lib/globals.sh
@@ -41,13 +44,12 @@ while [[ $1 != "" ]] ; do
             shift
             ;;
 
-        "--qx-cmd"|"-q")
-            QX_CMD="$2"
-            shift
-            ;;
-
         "--pull-all"|"-a")
             PULL_ALL=1
+            ;;
+
+        "--no-pull-all")
+            PULL_ALL=0
             ;;
 
         "--reset-npm"|"-r")
@@ -56,6 +58,10 @@ while [[ $1 != "" ]] ; do
 
         "--run-tests")
             RUN_TESTS=1
+            ;;
+
+        "--no-run-tests")
+            RUN_TESTS=0
             ;;
 
         "--source")
@@ -68,6 +74,10 @@ while [[ $1 != "" ]] ; do
 
         "--verbose"|"-v")
             VERBOSE=1
+            ;;
+            
+        "--quiet"|"-q")
+            QUIET=1
             ;;
 
         "--yes"|"-y")
@@ -86,10 +96,10 @@ if [[ $USAGE != 0 ]] ; then
     echo "where options are:"
     echo "  --qx-cmd, q command         - the qx command used for bootstrapping, defaults to 'npx qx'"
     echo "  --enable-repos [list]       - exhaustive list of repos to enable, space separated in quotes"
-    echo "  --pull-all, -p              - force a pull from all repos"
+    echo "  --[no-]pull-all, -p         - force a pull from all repos (default is to pull)"
     echo "  --reset-npm, -r             - erase and reinstall node_modules in all repos"
     echo "  --source                    - compile source targets instead of build"
-    echo "  --run-tests                 - run unit tests in repos"
+    echo "  --[no-]run-tests            - run unit tests in repos (default is to run tests)"
     echo "  --clean                     - clean the working directory"
     echo "  --yes, -y                   - answer yes to all prompts"
     echo "  --verbose, -v               - verbose output"
@@ -97,11 +107,27 @@ if [[ $USAGE != 0 ]] ; then
     exit 0
 fi
 
+if [[ $VERBOSE != 0 ]] ; then
+    echo "ANSWER_YES=$ANSWER_YES"
+    echo "PULL_ALL=$PULL_ALL"
+    echo "RESET_NPM=$RESET_NPM"
+    echo "BUILD_TARGET=$BUILD_TARGET"
+    echo "CLEAN=$CLEAN"
+    echo "RUN_TESTS=$RUN_TESTS"
+    echo "VERBOSE=$VERBOSE"
+    echo "QUIET=$QUIET"
+    echo "USAGE=$USAGE"
+fi
+
+
+[[ ! -d ./node_modules || ! -x $KNOWN_GOOD_QX_CMD ]] && npm install
+[[ ! -x $KNOWN_GOOD_QX_CMD ]] && errorExit "Cannot find the known-good version of the compiler" 
+
 
 # Clean start
 if [[ $CLEAN != 0 ]] ; then
     if askYesNo "Completely delete $WORKING_DIR" ; then
-        verbose "Deleting $WORKING_DIR"
+        info "Deleting $WORKING_DIR"
         rm -rf $WORKING_DIR
     else
         errorExit "Cannot delete $WORKING_DIR, so aborting"
@@ -115,6 +141,8 @@ fi
 
 if [[ $VERBOSE != 0 ]] ; then
     QX_COMPILE_ARGS="$QX_COMPILE_ARGS --verbose"
+elif [[ $QUIET != 0 ]] ; then
+    QX_COMPILE_ARGS="$QX_COMPILE_ARGS --quiet"
 fi
 
 
@@ -158,9 +186,9 @@ done
 # Framework bootstrap
 #
 function bootstrapFramework {
-    verbose "Bootstrapping the framework..."
+    info "Bootstrapping the framework..."
     checkoutRepo "qooxdoo"
-#    checkRepoNodeModules "qooxdoo"
+    checkRepoNodeModules "qooxdoo"
 }
 bootstrapFramework
 
@@ -169,34 +197,37 @@ bootstrapFramework
 # Compiler bootstrap
 #
 function bootstrapCompiler {
-    verbose "Bootstrapping the compiler..."
+    info "Bootstrapping the compiler using version $($KNOWN_GOOD_QX_CMD --version) ..."
+    
     checkoutRepo "qooxdoo-compiler"
     checkRepoNodeModules "qooxdoo-compiler"
-
-    # Setup the compiler / working bin directory
-    if [[ ! -f $WORKING_ABS_DIR/bin/qx ]] ; then
-        mkdir -p $WORKING_ABS_DIR/bin
-        ln -s ${REPO_ABS_DIRS[qooxdoo-compiler]}/bin/qx $WORKING_ABS_DIR/bin
-    fi
 
     local frameworkRepoDir=${REPO_ABS_DIRS["qooxdoo"]}
     local compilerRepoDir=${REPO_ABS_DIRS["qooxdoo-compiler"]}
 
-    # If the compiler is not linked to our framework, then we need to switch it over
-    if [[ ! -L $compilerRepoDir/node_modules/@qooxdoo/framework/ ]] ; then
-        verbose "Installing locally framework source into the compiler..."
-        rm -rf $compilerRepoDir/node_modules/@qooxdoo/framework
-        mkdir -p $compilerRepoDir/node_modules/@qooxdoo/framework
-        ln -s $frameworkRepoDir/framework/source $compilerRepoDir/node_modules/@qooxdoo/framework/source
-        # we need a hard link here - node do not follow the sym links and resolves the wrong directory
-        ln $frameworkRepoDir/Manifest.json $compilerRepoDir/node_modules/@qooxdoo/framework/Manifest.json
-        ln $frameworkRepoDir/package.json  $compilerRepoDir/node_modules/@qooxdoo/framework/package.json
+    if isWorking $compilerRepoDir ; then
+        # If the compiler is not linked to our framework, then we need to switch it over
+        if [[ ! -L $compilerRepoDir/node_modules/@qooxdoo/framework/ ]] ; then
+            verbose "Installing locally framework source into the compiler..."
+            rm -rf $compilerRepoDir/node_modules/@qooxdoo/framework
+            mkdir -p $compilerRepoDir/node_modules/@qooxdoo/framework
+            ln -s $frameworkRepoDir/framework/source $compilerRepoDir/node_modules/@qooxdoo/framework/source
+            
+            # we need a hard link here - node do not follow the sym links and resolves the wrong directory
+            ln $frameworkRepoDir/Manifest.json $compilerRepoDir/node_modules/@qooxdoo/framework/Manifest.json
+            ln $frameworkRepoDir/package.json  $compilerRepoDir/node_modules/@qooxdoo/framework/package.json
+        fi
     fi
 
-    verbose "build the compiler from repo"
+    verbose "Building the compiler"
     pushDirSafe $compilerRepoDir
-    $QX_CMD deploy $QX_COMPILE_ARGS --app-name=compiler
+    $KNOWN_GOOD_QX_CMD deploy $QX_COMPILE_ARGS --app-name=compiler
     popDir
+    
+    # Setup the compiler / working bin directory
+    [[ ! -d $WORKING_ABS_DIR/bin ]] && mkdir -p $WORKING_ABS_DIR/bin
+    rm -f $WORKING_ABS_DIR/bin/qx
+    ln -s ${REPO_ABS_DIRS[qooxdoo-compiler]}/bin/qx $WORKING_ABS_DIR/bin
 }
 bootstrapCompiler
 
@@ -206,7 +237,7 @@ bootstrapCompiler
 for repo in $ENABLED_REPOS ; do
     [[ $repo == "qooxdoo" || $repo == "qooxdoo-compiler" ]] && continue
 
-    verbose "Checking out $repo..."
+    info "Checking out $repo..."
     checkoutRepo $repo
     checkRepoNodeModules $repo
 done
@@ -233,13 +264,19 @@ done
 
 
 # Compile and test repos
+qxCmd=compile
+if [[ $RUN_TESTS != 0 ]] ; then
+    qxCmd=test
+fi
 for repo in $ENABLED_REPOS ; do
     [[ $repo == "qooxdoo" || $repo == "qooxdoo-compiler" ]] && continue
     repoDir=${REPO_DIRS[$repo]}
     pushDirSafe $repoDir
-    $WORKING_ABS_DIR/bin/qx test $QX_COMPILE_ARGS
+    $WORKING_ABS_DIR/bin/qx $qxCmd $QX_COMPILE_ARGS
     popDir
 done
 
 
 echo "Bootstrap is resolved and repos are compiled"
+
+

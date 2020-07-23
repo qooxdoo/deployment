@@ -26,7 +26,21 @@ function errorExit {
 #
 function verbose {
     local msg=$1
-    [[ $VERBOSE == 1 ]] && echo $msg
+    if [[ $VERBOSE == 1 ]]; then
+        echo "$@"
+    fi
+}
+
+##
+# Displays a message on the console if the --quiet argument is not used 
+#
+# @param msg {String} the message to display
+#
+function info {
+    local msg=$1
+    if [[ $QUIET == 0 ]]; then
+        echo $msg
+    fi
 }
 
 ##
@@ -46,7 +60,8 @@ startsWith() {
 }
 
 ##
-# Tests whether the directory is a working directory or not
+# Tests whether the directory is a working directory or not, ie whether 
+#  it is a subdirectory of the WORKING_ABS_DIR directory
 #
 # @param dir {String} the directory
 # @return 0 (ie true) if it is inside the WORKING_ABS_DIR directory
@@ -117,13 +132,19 @@ function popDir {
 # @return true for yes, or false for no
 function askYesNo {
     local question="$1"
-    local answer
-    echo -n "$question [Y/N] ? "
-    read answer
-    if [[ $answer == y || $answer == Y ]] ; then
+    
+    if [[ $ANSWER_YES == 1 ]] ; then
+        verbose "$question [Y/N] ?  Yes"
         return 0
     else
-        return 1
+        local answer
+        echo -n "$question [Y/N] ? "
+        read answer
+        if [[ $answer == y || $answer == Y ]] ; then
+            return 0
+        else
+            return 1
+        fi
     fi
 }
 

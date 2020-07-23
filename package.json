@@ -1,0 +1,21 @@
+{
+  "name": "qooxdoo-deployment",
+  "version": "1.0.0",
+  "description": "Qooxdoo release and deployment workflows ",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qooxdoo/deployment.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/qooxdoo/deployment/issues"
+  },
+  "homepage": "https://github.com/qooxdoo/deployment#readme",
+  "dependencies": {
+    "@qooxdoo/compiler": "^1.0.0-beta.20200613-2032"
+  }
+}
