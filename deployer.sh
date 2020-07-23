@@ -120,7 +120,10 @@ if [[ $VERBOSE != 0 ]] ; then
 fi
 
 
-[[ ! -d ./node_modules || ! -x $KNOWN_GOOD_QX_CMD ]] && npm install
+if [[ ! -d ./node_modules || ! -x $KNOWN_GOOD_QX_CMD ]]; then
+    info "Running npm install in deployment"
+    npm install
+fi
 [[ ! -x $KNOWN_GOOD_QX_CMD ]] && errorExit "Cannot find the known-good version of the compiler" 
 
 
