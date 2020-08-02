@@ -291,7 +291,7 @@ function publishFramework {
     info "publish qooxdoo framework"
 
     pushDirSafe ${REPO_ABS_DIRS["qooxdoo"]}
-    local VERSION=$(node -p "require('./Manifest.json').version")
+    local VERSION=$(jq -M --raw-output '.info.version' Manifest.json)
     if [[ "$VERSION" =~ (alpha|beta) ]]; then
       VERSION="$VERSION-$PACKAGE_DATE"
     fi
@@ -334,7 +334,7 @@ function publishCompiler {
     info "publish qooxdoo compiler"
 
     pushDirSafe ${REPO_ABS_DIRS["qooxdoo-compiler"]}
-    local VERSION=$(node -p "require('./Manifest.json').version")
+    local VERSION=$(jq -M --raw-output '.info.version' Manifest.json)
     if [[ "$VERSION" =~ (alpha|beta) ]]; then
       VERSION="$VERSION-$PACKAGE_DATE"
     fi
