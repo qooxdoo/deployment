@@ -1,16 +1,9 @@
-name: Deploy API viewer with integrated namespace
-# This is just a test, will be removed
+name: Deploy qooxdoo stuff
 on:
-  push:
-#    branches: [ master ]
-  # nightly job
-  #schedule:
-  #  - cron: '0 12 * * *'
-  # triggered by repo
-  #repository_dispatch:
+  repository_dispatch:
+    types: [deploy]
 
 jobs:
-
   deploy:
     name: Deploy API Viewer
     runs-on: ubuntu-latest
