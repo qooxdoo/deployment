@@ -305,7 +305,7 @@ function publishFramework {
     pushDirSafe $WORKING_ABS_DIR/deploy/server
     cp $DEPLOY_DIR/packages/server/package.json .
     npm version $VERSION
-    npm publish --access public --dry-run
+    npm publish --access public 
     popDir
 
     verbose "publish @qooxdoo/famework"
@@ -322,7 +322,7 @@ function publishFramework {
     pushDirSafe $WORKING_ABS_DIR/deploy/framework
     cp $DEPLOY_DIR/packages/framework/package.json .
     npm version $VERSION
-    npm publish --access public --dry-run
+    npm publish --access public 
     popDir
 
 }
@@ -348,7 +348,7 @@ function publishCompiler {
     popDir
     pushDirSafe $WORKING_ABS_DIR/deploy/compiler
     npm version $VERSION
-    npm publish --access public --dry-run
+    npm publish --access public 
     popDir
 }
 publishCompiler
