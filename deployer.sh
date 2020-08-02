@@ -120,7 +120,7 @@ if [[ $VERBOSE != 0 ]] ; then
 
     echo node version: $(node --version)
     echo npm version:  $(npm --version)
-    echo bootstrap qx: $KNOWN_GOOD_QX_CMD
+    echo bootstrap qx: $($KNOWN_GOOD_QX_CMD --version) 
     echo -e "\e[39m"
 fi
 
@@ -200,7 +200,7 @@ function bootstrapCompiler {
     checkoutRepo "qooxdoo-compiler"
     checkRepoNodeModules "qooxdoo-compiler"
 
-    info "Bootstrapping the compiler using version $($KNOWN_GOOD_QX_CMD --version) ..."
+    info "Bootstrapping the compiler"
 
     local frameworkRepoDir=${REPO_ABS_DIRS["qooxdoo"]}
     local compilerRepoDir=${REPO_ABS_DIRS["qooxdoo-compiler"]}
@@ -291,8 +291,10 @@ function publishFramework {
     info "publish qooxdoo framework"
 
     pushDirSafe ${REPO_ABS_DIRS["qooxdoo"]}
-    local VERSION=$(cat version.txt)
-    VERSION="$VERSION-$PACKAGE_DATE"
+    local VERSION=$(node -p "require('./Manifest.json').version")
+    if [[ "$VERSION" =~ (alpha|beta) ]]; then
+      VERSION="$VERSION-$PACKAGE_DATE"
+    fi
     verbose "new version $VERSION"
 
     verbose "publish @qooxdoo/server"
@@ -332,8 +334,10 @@ function publishCompiler {
     info "publish qooxdoo compiler"
 
     pushDirSafe ${REPO_ABS_DIRS["qooxdoo-compiler"]}
-    local VERSION=$(node -p "require('./package.json').version")
-    VERSION="$VERSION-$PACKAGE_DATE"
+    local VERSION=$(node -p "require('./Manifest.json').version")
+    if [[ "$VERSION" =~ (alpha|beta) ]]; then
+      VERSION="$VERSION-$PACKAGE_DATE"
+    fi
     verbose "new version $VERSION"
 
     mkdir -p $WORKING_ABS_DIR/deploy/compiler
