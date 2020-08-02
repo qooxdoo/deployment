@@ -2,7 +2,7 @@ name: Deploy API viewer with integrated namespace
 # This is just a test, will be removed
 on:
   push:
-    branches: [ master ]
+#    branches: [ master ]
   # nightly job
   #schedule:
   #  - cron: '0 12 * * *'
@@ -15,17 +15,10 @@ jobs:
     name: Deploy API Viewer
     runs-on: ubuntu-latest
     steps:
-
-      - name: Install & build compiler
-        run: ./deployer.sh --verbose
-
-      - name: Build API Viewer with compiler
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: run tests and deploy
         run: |
-          cd working/repos/qxl.apiviewer
-          ../../bin/qx deploy --out=../../../html --source-maps
-
-      - name: Deploy API Viewer
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./html
+            ./deployer.sh --verbose
+        env: 
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}            

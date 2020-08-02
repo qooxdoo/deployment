@@ -1,0 +1,20 @@
+{
+  "name": "@qooxdoo/framework",
+  "version": "6.0.0-beta",
+  "description": "The JS Framework for Coders",
+  "author": "The qooxdoo project",
+  "license": "MIT",
+  "homepage": "http://qooxdoo.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qooxdoo/qooxdoo"
+  },
+  "files": [
+    "LICENSE",
+    "CHANGELOG.md",
+    "README.md",
+    "Manifest.json",
+    "source",
+    "tool"
+  ]
+}

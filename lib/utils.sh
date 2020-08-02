@@ -14,7 +14,7 @@
 function errorExit {
     local msg=$1
     local code=$2
-    echo $msg >&2
+    echo -e "\e[31m$msg\e[39m"  >&2
     [[ $code == "" ]] && code=1
     exit $code
 }
@@ -27,7 +27,7 @@ function errorExit {
 function verbose {
     local msg=$1
     if [[ $VERBOSE == 1 ]]; then
-        echo "$@"
+        echo -e "\e[33m$msg\e[39m"
     fi
 }
 
@@ -39,7 +39,7 @@ function verbose {
 function info {
     local msg=$1
     if [[ $QUIET == 0 ]]; then
-        echo $msg
+        echo -e "\e[32m$msg\e[39m"
     fi
 }
 
