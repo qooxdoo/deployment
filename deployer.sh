@@ -120,7 +120,7 @@ if [[ $VERBOSE != 0 ]] ; then
 
     echo node version: $(node --version)
     echo npm version:  $(npm --version)
-    echo bootstrap qx: $($KNOWN_GOOD_QX_CMD --version) 
+    echo bootstrap qx: $KNOWN_GOOD_QX_CMD 
     echo -e "\e[39m"
 fi
 
@@ -200,7 +200,7 @@ function bootstrapCompiler {
     checkoutRepo "qooxdoo-compiler"
     checkRepoNodeModules "qooxdoo-compiler"
 
-    info "Bootstrapping the compiler"
+    info "Bootstrapping the compiler with qx version $($KNOWN_GOOD_QX_CMD --version)"
 
     local frameworkRepoDir=${REPO_ABS_DIRS["qooxdoo"]}
     local compilerRepoDir=${REPO_ABS_DIRS["qooxdoo-compiler"]}
