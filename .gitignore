@@ -1,15 +1,1 @@
-# IDEs
-/.idea/
-
-# node
-/node_modules/
-
-# repos
-/qooxdoo/
-/compiler/
-
-# build
-/compiled/
-/html/
-/local/
-/working/
+/working

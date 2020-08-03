@@ -1,0 +1,17 @@
+name: Deploy qooxdoo stuff
+on:
+  repository_dispatch:
+    types: [deploy]
+
+jobs:
+  deploy:
+    name: Deploy API Viewer
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: run tests and deploy
+        run: |
+            ./deployer.sh --verbose
+        env: 
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}            

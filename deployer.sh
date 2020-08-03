@@ -3,8 +3,6 @@ set -e
 
 # Preset default command line args
 ANSWER_YES=0
-PULL_ALL=1
-RESET_NPM=0
 BUILD_TARGET=1
 CLEAN=0
 RUN_TESTS=1
@@ -21,7 +19,7 @@ DEPLOY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 declare -A REPO_ABS_DIRS
 declare -A REPO_IS_WORKING
 QX_COMPILE_ARGS=
-KNOWN_GOOD_QX_CMD=./node_modules/@qooxdoo/compiler/qx
+KNOWN_GOOD_QX_CMD="npx qx"
 
 
 # Load utility methods
@@ -42,22 +40,6 @@ while [[ $1 != "" ]] ; do
         "--enable-repos")
             LOCAL_ENABLE_REPOS="$2"
             shift
-            ;;
-
-        "--pull-all"|"-a")
-            PULL_ALL=1
-            ;;
-
-        "--no-pull-all")
-            PULL_ALL=0
-            ;;
-
-        "--reset-npm"|"-r")
-            RESET_NPM=1
-            ;;
-
-        "--run-tests")
-            RUN_TESTS=1
             ;;
 
         "--no-run-tests")
@@ -94,12 +76,9 @@ done
 if [[ $USAGE != 0 ]] ; then
     echo "Usage: $0 [options]"
     echo "where options are:"
-    echo "  --qx-cmd, q command         - the qx command used for bootstrapping, defaults to 'npx qx'"
     echo "  --enable-repos [list]       - exhaustive list of repos to enable, space separated in quotes"
-    echo "  --[no-]pull-all, -p         - force a pull from all repos (default is to pull)"
-    echo "  --reset-npm, -r             - erase and reinstall node_modules in all repos"
     echo "  --source                    - compile source targets instead of build"
-    echo "  --[no-]run-tests            - run unit tests in repos (default is to run tests)"
+    echo "  --no-run-tests              - do not run unit tests in repos - compile only (default is to run tests)"
     echo "  --clean                     - clean the working directory"
     echo "  --yes, -y                   - answer yes to all prompts"
     echo "  --verbose, -v               - verbose output"
@@ -108,23 +87,21 @@ if [[ $USAGE != 0 ]] ; then
 fi
 
 if [[ $VERBOSE != 0 ]] ; then
+    echo -e "\e[33mused flags"
     echo "ANSWER_YES=$ANSWER_YES"
-    echo "PULL_ALL=$PULL_ALL"
-    echo "RESET_NPM=$RESET_NPM"
     echo "BUILD_TARGET=$BUILD_TARGET"
     echo "CLEAN=$CLEAN"
     echo "RUN_TESTS=$RUN_TESTS"
     echo "VERBOSE=$VERBOSE"
     echo "QUIET=$QUIET"
     echo "USAGE=$USAGE"
+
+    echo node version: $(node --version)
+    echo npm version:  $(npm --version)
+    echo bootstrap qx: $KNOWN_GOOD_QX_CMD 
+    echo -e "\e[39m"
 fi
 
-
-if [[ ! -d ./node_modules || ! -x $KNOWN_GOOD_QX_CMD ]]; then
-    info "Running npm install in deployment"
-    npm install
-fi
-[[ ! -x $KNOWN_GOOD_QX_CMD ]] && errorExit "Cannot find the known-good version of the compiler" 
 
 
 # Clean start
@@ -183,8 +160,6 @@ for repo in "${!REPO_ENABLED[@]}" ; do
 done
 
 
-
-
 #
 # Framework bootstrap
 #
@@ -200,10 +175,10 @@ bootstrapFramework
 # Compiler bootstrap
 #
 function bootstrapCompiler {
-    info "Bootstrapping the compiler using version $($KNOWN_GOOD_QX_CMD --version) ..."
-    
     checkoutRepo "qooxdoo-compiler"
     checkRepoNodeModules "qooxdoo-compiler"
+
+    info "Bootstrapping the compiler with qx version $($KNOWN_GOOD_QX_CMD --version)"
 
     local frameworkRepoDir=${REPO_ABS_DIRS["qooxdoo"]}
     local compilerRepoDir=${REPO_ABS_DIRS["qooxdoo-compiler"]}
@@ -233,6 +208,7 @@ function bootstrapCompiler {
     ln -s ${REPO_ABS_DIRS[qooxdoo-compiler]}/bin/qx $WORKING_ABS_DIR/bin
 }
 bootstrapCompiler
+
 
 
 
@@ -272,14 +248,90 @@ if [[ $RUN_TESTS != 0 ]] ; then
     qxCmd=test
 fi
 for repo in $ENABLED_REPOS ; do
-    [[ $repo == "qooxdoo" || $repo == "qooxdoo-compiler" ]] && continue
+    [[ $repo == "qooxdoo" ]] && continue
+
+    info "compile and test $repo"
     repoDir=${REPO_DIRS[$repo]}
     pushDirSafe $repoDir
     $WORKING_ABS_DIR/bin/qx $qxCmd $QX_COMPILE_ARGS
     popDir
 done
 
+info "Bootstrap is resolved and repos are compiled"
 
-echo "Bootstrap is resolved and repos are compiled"
+# fill .npmrc with access token
+echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN:-}" > ~/.npmrc
+PACKAGE_DATE=$(date +%Y%m%d-%H%M)
+[[ ! -d $WORKING_ABS_DIR/deploy ]] && mkdir -p $WORKING_ABS_DIR/deploy
+rm -fR $WORKING_ABS_DIR/deploy/*
 
+function publishFramework {
+    info "publish qooxdoo framework"
+
+    pushDirSafe ${REPO_ABS_DIRS["qooxdoo"]}
+    local VERSION=$(jq -M --raw-output '.info.version' Manifest.json)
+    if [[ "$VERSION" =~ (alpha|beta) ]]; then
+      VERSION="$VERSION-$PACKAGE_DATE"
+    fi
+    verbose "new version $VERSION"
+
+    verbose "publish @qooxdoo/server"
+    mkdir -p $WORKING_ABS_DIR/deploy/server
+    $WORKING_ABS_DIR/bin/qx deploy --config-file=compile-server.json --out=$WORKING_ABS_DIR/deploy/server/lib --clean
+    cp *.md          $WORKING_ABS_DIR/deploy/server
+    cp LICENSE       $WORKING_ABS_DIR/deploy/server
+    jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/server/Manifest.json
+    popDir
+    pushDirSafe $WORKING_ABS_DIR/deploy/server
+    cp $DEPLOY_DIR/packages/server/package.json .
+    npm version $VERSION
+    npm publish --access public 
+    popDir
+
+    verbose "publish @qooxdoo/famework"
+    pushDirSafe ${REPO_ABS_DIRS["qooxdoo"]}
+    mkdir -p $WORKING_ABS_DIR/deploy/framework
+    cp *.md          $WORKING_ABS_DIR/deploy/framework
+    cp LICENSE       $WORKING_ABS_DIR/deploy/framework
+    jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/framework/Manifest.json
+    mkdir -p $WORKING_ABS_DIR/deploy/framework/source
+    cp -R framework/source/* $WORKING_ABS_DIR/deploy/framework/source
+    mkdir -p $WORKING_ABS_DIR/deploy/framework/tool/data/cldr
+    cp -R tool/data/cldr/* $WORKING_ABS_DIR/deploy/framework/tool/data/cldr
+    popDir
+    pushDirSafe $WORKING_ABS_DIR/deploy/framework
+    cp $DEPLOY_DIR/packages/framework/package.json .
+    npm version $VERSION
+    npm publish --access public 
+    popDir
+
+}
+publishFramework
+
+function publishCompiler {
+    info "publish qooxdoo compiler"
+
+    pushDirSafe ${REPO_ABS_DIRS["qooxdoo-compiler"]}
+    local VERSION=$(jq -M --raw-output '.info.version' Manifest.json)
+    if [[ "$VERSION" =~ (alpha|beta) ]]; then
+      VERSION="$VERSION-$PACKAGE_DATE"
+    fi
+    verbose "new version $VERSION"
+
+    mkdir -p $WORKING_ABS_DIR/deploy/compiler
+    cp *.md                 $WORKING_ABS_DIR/deploy/compiler
+    cp LICENSE              $WORKING_ABS_DIR/deploy/compiler
+    jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/compiler/Manifest.json
+    cp npm-shrinkwrap.json  $WORKING_ABS_DIR/deploy/compiler
+    mkdir -p $WORKING_ABS_DIR/deploy/compiler/bin
+    cp -R bin/*      $WORKING_ABS_DIR/deploy/compiler/bin
+    $WORKING_ABS_DIR/bin/qx deploy --out=$WORKING_ABS_DIR/deploy/compiler/lib --app-name=compiler --clean
+    jq -M 'del(.devDependencies) | del(.scripts)' package.json > $WORKING_ABS_DIR/deploy/compiler/package.json
+    popDir
+    pushDirSafe $WORKING_ABS_DIR/deploy/compiler
+    npm version $VERSION
+    npm publish --access public 
+    popDir
+}
+publishCompiler
 
