@@ -3,8 +3,6 @@ set -e
 
 # Preset default command line args
 ANSWER_YES=0
-PULL_ALL=1
-RESET_NPM=0
 BUILD_TARGET=1
 CLEAN=0
 RUN_TESTS=1
@@ -44,22 +42,6 @@ while [[ $1 != "" ]] ; do
             shift
             ;;
 
-        "--pull-all"|"-a")
-            PULL_ALL=1
-            ;;
-
-        "--no-pull-all")
-            PULL_ALL=0
-            ;;
-
-        "--reset-npm"|"-r")
-            RESET_NPM=1
-            ;;
-
-        "--run-tests")
-            RUN_TESTS=1
-            ;;
-
         "--no-run-tests")
             RUN_TESTS=0
             ;;
@@ -95,10 +77,8 @@ if [[ $USAGE != 0 ]] ; then
     echo "Usage: $0 [options]"
     echo "where options are:"
     echo "  --enable-repos [list]       - exhaustive list of repos to enable, space separated in quotes"
-    echo "  --[no-]pull-all, -p         - force a pull from all repos (default is to pull)"
-    echo "  --reset-npm, -r             - erase and reinstall node_modules in all repos"
     echo "  --source                    - compile source targets instead of build"
-    echo "  --[no-]run-tests            - run unit tests in repos (default is to run tests)"
+    echo "  --no-run-tests              - do not run unit tests in repos - compile only (default is to run tests)"
     echo "  --clean                     - clean the working directory"
     echo "  --yes, -y                   - answer yes to all prompts"
     echo "  --verbose, -v               - verbose output"
@@ -109,8 +89,6 @@ fi
 if [[ $VERBOSE != 0 ]] ; then
     echo -e "\e[33mused flags"
     echo "ANSWER_YES=$ANSWER_YES"
-    echo "PULL_ALL=$PULL_ALL"
-    echo "RESET_NPM=$RESET_NPM"
     echo "BUILD_TARGET=$BUILD_TARGET"
     echo "CLEAN=$CLEAN"
     echo "RUN_TESTS=$RUN_TESTS"
@@ -302,7 +280,7 @@ function publishFramework {
     $WORKING_ABS_DIR/bin/qx deploy --config-file=compile-server.json --out=$WORKING_ABS_DIR/deploy/server/lib --clean
     cp *.md          $WORKING_ABS_DIR/deploy/server
     cp LICENSE       $WORKING_ABS_DIR/deploy/server
-    cp Manifest.json $WORKING_ABS_DIR/deploy/server
+    jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/server/Manifest.json
     popDir
     pushDirSafe $WORKING_ABS_DIR/deploy/server
     cp $DEPLOY_DIR/packages/server/package.json .
@@ -315,7 +293,7 @@ function publishFramework {
     mkdir -p $WORKING_ABS_DIR/deploy/framework
     cp *.md          $WORKING_ABS_DIR/deploy/framework
     cp LICENSE       $WORKING_ABS_DIR/deploy/framework
-    cp Manifest.json $WORKING_ABS_DIR/deploy/framework
+    jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/framework/Manifest.json
     mkdir -p $WORKING_ABS_DIR/deploy/framework/source
     cp -R framework/source/* $WORKING_ABS_DIR/deploy/framework/source
     mkdir -p $WORKING_ABS_DIR/deploy/framework/tool/data/cldr
@@ -343,7 +321,7 @@ function publishCompiler {
     mkdir -p $WORKING_ABS_DIR/deploy/compiler
     cp *.md                 $WORKING_ABS_DIR/deploy/compiler
     cp LICENSE              $WORKING_ABS_DIR/deploy/compiler
-    cp Manifest.json        $WORKING_ABS_DIR/deploy/compiler
+    jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/compiler/Manifest.json
     cp npm-shrinkwrap.json  $WORKING_ABS_DIR/deploy/compiler
     mkdir -p $WORKING_ABS_DIR/deploy/compiler/bin
     cp -R bin/*      $WORKING_ABS_DIR/deploy/compiler/bin
