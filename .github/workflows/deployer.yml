@@ -1,11 +1,10 @@
-name: Deploy qooxdoo stuff
+name: deploy qooxdoo
 on:
   repository_dispatch:
     types: [deploy]
 
 jobs:
   deploy:
-    name: Deploy API Viewer
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -15,3 +14,9 @@ jobs:
             ./deployer.sh --verbose
         env: 
           NPM_TOKEN: ${{secrets.NPM_TOKEN}}            
+      - name: dispatch deploy to api viewer
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.ACTION_TOKEN }}
+          repository: qooxdoo/qxl.apiviewer
+          event-type: deploy
