@@ -319,18 +319,18 @@ function publishCompiler {
     verbose "new version $VERSION"
 
     mkdir -p $WORKING_ABS_DIR/deploy/compiler
+    $WORKING_ABS_DIR/bin/qx deploy --out=$WORKING_ABS_DIR/deploy/compiler/lib --app-name=compiler --clean
     cp *.md                 $WORKING_ABS_DIR/deploy/compiler
     cp LICENSE              $WORKING_ABS_DIR/deploy/compiler
-    jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/compiler/Manifest.json
-    cp npm-shrinkwrap.json  $WORKING_ABS_DIR/deploy/compiler
     mkdir -p $WORKING_ABS_DIR/deploy/compiler/bin
     cp -R bin/*      $WORKING_ABS_DIR/deploy/compiler/bin
-    $WORKING_ABS_DIR/bin/qx deploy --out=$WORKING_ABS_DIR/deploy/compiler/lib --app-name=compiler --clean
+    jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/compiler/Manifest.json
     jq -M 'del(.devDependencies) | del(.scripts)' package.json > $WORKING_ABS_DIR/deploy/compiler/package.json
+    jq -M 'del(.dependencies["@qooxdoo/compiler"]) | del(.dependencies["tape"]) | del(.dependencies["source-map-support"])' npm-shrinkwrap.json > $WORKING_ABS_DIR/deploy/compiler/npm-shrinkwrap.json
     popDir
     pushDirSafe $WORKING_ABS_DIR/deploy/compiler
     npm version $VERSION
-    npm publish --access public 
+    npm publish --access public --dry-run
     popDir
 }
 publishCompiler
