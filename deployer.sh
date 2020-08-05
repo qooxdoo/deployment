@@ -9,7 +9,7 @@ RUN_TESTS=1
 VERBOSE=0
 QUIET=0
 USAGE=0
-
+NPM_COMMAND="publish --access public"
 
 # Directory that this script is in
 DEPLOY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -37,6 +37,10 @@ KNOWN_GOOD_QX_CMD="npx qx"
 #
 while [[ $1 != "" ]] ; do
     case "$1" in
+        "--npm-pack")
+            NPM_COMMAND="pack"
+            ;;
+			
         "--enable-repos")
             LOCAL_ENABLE_REPOS="$2"
             shift
@@ -76,6 +80,7 @@ done
 if [[ $USAGE != 0 ]] ; then
     echo "Usage: $0 [options]"
     echo "where options are:"
+    echo "  --npm-pack                  - use npm pack instead of npm publish"
     echo "  --enable-repos [list]       - exhaustive list of repos to enable, space separated in quotes"
     echo "  --source                    - compile source targets instead of build"
     echo "  --no-run-tests              - do not run unit tests in repos - compile only (default is to run tests)"
@@ -95,6 +100,7 @@ if [[ $VERBOSE != 0 ]] ; then
     echo "VERBOSE=$VERBOSE"
     echo "QUIET=$QUIET"
     echo "USAGE=$USAGE"
+    echo "NPM_COMMAND=$NPM_COMMAND"
 
     echo node version: $(node --version)
     echo npm version:  $(npm --version)
@@ -262,6 +268,8 @@ info "Bootstrap is resolved and repos are compiled"
 # fill .npmrc with access token
 echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN:-}" > ~/.npmrc
 PACKAGE_DATE=$(date +%Y%m%d-%H%M)
+FRAMEWORK_VERSION=
+
 [[ ! -d $WORKING_ABS_DIR/deploy ]] && mkdir -p $WORKING_ABS_DIR/deploy
 rm -fR $WORKING_ABS_DIR/deploy/*
 
@@ -274,10 +282,10 @@ function publishFramework {
       VERSION="$VERSION-$PACKAGE_DATE"
     fi
     verbose "new version $VERSION"
-
+    FRAMEWORK_VERSION=$VERSION
     verbose "publish @qooxdoo/server"
     mkdir -p $WORKING_ABS_DIR/deploy/server
-    $WORKING_ABS_DIR/bin/qx deploy --config-file=compile-server.json --out=$WORKING_ABS_DIR/deploy/server/lib --clean
+    $WORKING_ABS_DIR/bin/qx deploy --config-file=compile-server.json --out=$WORKING_ABS_DIR/deploy/server/lib --clean --verbose
     cp *.md          $WORKING_ABS_DIR/deploy/server
     cp LICENSE       $WORKING_ABS_DIR/deploy/server
     jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/server/Manifest.json
@@ -285,10 +293,10 @@ function publishFramework {
     pushDirSafe $WORKING_ABS_DIR/deploy/server
     cp $DEPLOY_DIR/packages/server/package.json .
     npm version $VERSION
-    npm publish --access public 
+    npm $NPM_COMMAND
     popDir
 
-    verbose "publish @qooxdoo/famework"
+    verbose "publish @qooxdoo/framework"
     pushDirSafe ${REPO_ABS_DIRS["qooxdoo"]}
     mkdir -p $WORKING_ABS_DIR/deploy/framework
     cp *.md          $WORKING_ABS_DIR/deploy/framework
@@ -302,7 +310,7 @@ function publishFramework {
     pushDirSafe $WORKING_ABS_DIR/deploy/framework
     cp $DEPLOY_DIR/packages/framework/package.json .
     npm version $VERSION
-    npm publish --access public 
+    npm $NPM_COMMAND 
     popDir
 
 }
@@ -319,18 +327,22 @@ function publishCompiler {
     verbose "new version $VERSION"
 
     mkdir -p $WORKING_ABS_DIR/deploy/compiler
-    $WORKING_ABS_DIR/bin/qx deploy --out=$WORKING_ABS_DIR/deploy/compiler/lib --app-name=compiler --clean
+    $WORKING_ABS_DIR/bin/qx deploy --out=$WORKING_ABS_DIR/deploy/compiler/lib --app-name=compiler --clean --verbose
     cp *.md                 $WORKING_ABS_DIR/deploy/compiler
     cp LICENSE              $WORKING_ABS_DIR/deploy/compiler
     mkdir -p $WORKING_ABS_DIR/deploy/compiler/bin
     cp -R bin/*      $WORKING_ABS_DIR/deploy/compiler/bin
     jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/compiler/Manifest.json
-    jq -M 'del(.devDependencies) | del(.scripts)' package.json > $WORKING_ABS_DIR/deploy/compiler/package.json
-    jq -M 'del(.dependencies["@qooxdoo/compiler"]) | del(.dependencies["tape"]) | del(.dependencies["source-map-support"])' npm-shrinkwrap.json > $WORKING_ABS_DIR/deploy/compiler/npm-shrinkwrap.json
+    jq -M 'del(.devDependencies) | del(.scripts)' package.json \
+    | jq --arg version "^$FRAMEWORK_VERSION" '.dependencies["@qooxdoo/framework"]=$version' \
+    > $WORKING_ABS_DIR/deploy/compiler/package.json
+    jq -M 'del(.dependencies["@qooxdoo/compiler"]) | del(.dependencies["tape"]) | del(.dependencies["source-map-support"])' npm-shrinkwrap.json \
+    | jq --arg version $FRAMEWORK_VERSION '.dependencies["@qooxdoo/framework"].version=$version' \
+    > $WORKING_ABS_DIR/deploy/compiler/npm-shrinkwrap.json
     popDir
     pushDirSafe $WORKING_ABS_DIR/deploy/compiler
     npm version $VERSION
-    npm publish --access public --dry-run
+    npm $NPM_COMMAND
     popDir
 }
 publishCompiler
