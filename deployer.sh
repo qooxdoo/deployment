@@ -334,13 +334,12 @@ function publishCompiler {
     cp -R bin/*      $WORKING_ABS_DIR/deploy/compiler/bin
     jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/compiler/Manifest.json
     jq -M 'del(.devDependencies) | del(.scripts)' package.json \
-    | jq --arg version "^$FRAMEWORK_VERSION" '.dependencies["@qooxdoo/framework"]=$version' \
     > $WORKING_ABS_DIR/deploy/compiler/package.json
     jq -M 'del(.dependencies["@qooxdoo/compiler"]) | del(.dependencies["tape"]) | del(.dependencies["source-map-support"])' npm-shrinkwrap.json \
-    | jq --arg version $FRAMEWORK_VERSION '.dependencies["@qooxdoo/framework"].version=$version' \
     > $WORKING_ABS_DIR/deploy/compiler/npm-shrinkwrap.json
     popDir
     pushDirSafe $WORKING_ABS_DIR/deploy/compiler
+    npm install @qooxdoo/framework
     npm version $VERSION
     npm $NPM_COMMAND
     popDir
