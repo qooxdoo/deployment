@@ -268,7 +268,6 @@ info "Bootstrap is resolved and repos are compiled"
 # fill .npmrc with access token
 echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN:-}" > ~/.npmrc
 PACKAGE_DATE=$(date +%Y%m%d-%H%M)
-FRAMEWORK_VERSION=
 
 [[ ! -d $WORKING_ABS_DIR/deploy ]] && mkdir -p $WORKING_ABS_DIR/deploy
 rm -fR $WORKING_ABS_DIR/deploy/*
@@ -282,8 +281,9 @@ function publishFramework {
       VERSION="$VERSION-$PACKAGE_DATE"
     fi
     verbose "new version $VERSION"
-    FRAMEWORK_VERSION=$VERSION
+    npm version $VERSION
     verbose "publish @qooxdoo/server"
+
     mkdir -p $WORKING_ABS_DIR/deploy/server
     $WORKING_ABS_DIR/bin/qx deploy --config-file=compile-server.json --out=$WORKING_ABS_DIR/deploy/server/lib --clean --verbose
     cp *.md          $WORKING_ABS_DIR/deploy/server
@@ -292,7 +292,6 @@ function publishFramework {
     popDir
     pushDirSafe $WORKING_ABS_DIR/deploy/server
     cp $DEPLOY_DIR/packages/server/package.json .
-    npm version $VERSION
     npm $NPM_COMMAND
     popDir
 
@@ -324,6 +323,7 @@ function publishCompiler {
     if [[ "$VERSION" =~ (alpha|beta) ]]; then
       VERSION="$VERSION-$PACKAGE_DATE"
     fi
+    npm version $VERSION
     verbose "new version $VERSION"
 
     mkdir -p $WORKING_ABS_DIR/deploy/compiler
@@ -340,7 +340,6 @@ function publishCompiler {
     popDir
     pushDirSafe $WORKING_ABS_DIR/deploy/compiler
     npm install @qooxdoo/framework
-    npm version $VERSION
     npm $NPM_COMMAND
     popDir
 }
