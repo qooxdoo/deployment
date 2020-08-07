@@ -281,9 +281,8 @@ function publishFramework {
       VERSION="$VERSION-$PACKAGE_DATE"
     fi
     verbose "new version $VERSION"
-    npm version $VERSION
-    verbose "publish @qooxdoo/server"
 
+    verbose "publish @qooxdoo/server"
     mkdir -p $WORKING_ABS_DIR/deploy/server
     $WORKING_ABS_DIR/bin/qx deploy --config-file=compile-server.json --out=$WORKING_ABS_DIR/deploy/server/lib --clean --verbose
     cp *.md          $WORKING_ABS_DIR/deploy/server
@@ -292,6 +291,7 @@ function publishFramework {
     popDir
     pushDirSafe $WORKING_ABS_DIR/deploy/server
     cp $DEPLOY_DIR/packages/server/package.json .
+    npm version $VERSION
     npm $NPM_COMMAND
     popDir
 
@@ -323,9 +323,8 @@ function publishCompiler {
     if [[ "$VERSION" =~ (alpha|beta) ]]; then
       VERSION="$VERSION-$PACKAGE_DATE"
     fi
-    npm version $VERSION
+    npm version $VERSION     # adapt version for compiler info
     verbose "new version $VERSION"
-
     mkdir -p $WORKING_ABS_DIR/deploy/compiler
     $WORKING_ABS_DIR/bin/qx deploy --out=$WORKING_ABS_DIR/deploy/compiler/lib --app-name=compiler --clean --verbose
     cp *.md                 $WORKING_ABS_DIR/deploy/compiler
