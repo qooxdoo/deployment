@@ -323,7 +323,7 @@ function publishCompiler {
     if [[ "$VERSION" =~ (alpha|beta) ]]; then
       VERSION="$VERSION-$PACKAGE_DATE"
     fi
-    npm version $VERSION     # adapt version for compiler info
+    npm --no-git-tag-version version $VERSION --no-git-tag-version    # adapt version for compiler info
     verbose "new version $VERSION"
     mkdir -p $WORKING_ABS_DIR/deploy/compiler
     $WORKING_ABS_DIR/bin/qx deploy --out=$WORKING_ABS_DIR/deploy/compiler/lib --app-name=compiler --clean --verbose
