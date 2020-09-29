@@ -181,10 +181,10 @@ bootstrapFramework
 # Compiler bootstrap
 #
 function bootstrapCompiler {
+    info "Bootstrapping the compiler"
     checkoutRepo "qooxdoo-compiler"
     checkRepoNodeModules "qooxdoo-compiler"
-
-    info "Bootstrapping the compiler with qx version $($KNOWN_GOOD_QX_CMD --version)"
+    info "with qx version $($KNOWN_GOOD_QX_CMD --version)"
 
     local frameworkRepoDir=${REPO_ABS_DIRS["qooxdoo"]}
     local compilerRepoDir=${REPO_ABS_DIRS["qooxdoo-compiler"]}
@@ -214,9 +214,6 @@ function bootstrapCompiler {
     ln -s ${REPO_ABS_DIRS[qooxdoo-compiler]}/bin/qx $WORKING_ABS_DIR/bin
 }
 bootstrapCompiler
-
-
-
 
 # Checkout any repos which we need
 for repo in $ENABLED_REPOS ; do
@@ -268,6 +265,8 @@ info "Bootstrap is resolved and repos are compiled"
 # fill .npmrc with access token
 echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN:-}" > ~/.npmrc
 PACKAGE_DATE=$(date +%Y%m%d-%H%M)
+FRAMEWORK_VERSION=
+
 
 [[ ! -d $WORKING_ABS_DIR/deploy ]] && mkdir -p $WORKING_ABS_DIR/deploy
 rm -fR $WORKING_ABS_DIR/deploy/*
@@ -309,6 +308,7 @@ function publishFramework {
     pushDirSafe $WORKING_ABS_DIR/deploy/framework
     cp $DEPLOY_DIR/packages/framework/package.json .
     npm version $VERSION
+    FRAMEWORK_VERSION=$VERSION
     npm $NPM_COMMAND 
     popDir
 
@@ -338,7 +338,7 @@ function publishCompiler {
     > $WORKING_ABS_DIR/deploy/compiler/npm-shrinkwrap.json
     popDir
     pushDirSafe $WORKING_ABS_DIR/deploy/compiler
-    npm install @qooxdoo/framework
+    npm install @qooxdoo/framework@$FRAMEWORK_VERSION
     npm $NPM_COMMAND
     popDir
 }
