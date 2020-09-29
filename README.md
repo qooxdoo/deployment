@@ -1,3 +1,5 @@
+![deploy qooxdoo](https://github.com/qooxdoo/deployment/workflows/deploy%20qooxdoo/badge.svg)
+
 # Qooxdoo releases & deployment
 
 This repo contains experimental code to separate the release and deployment
