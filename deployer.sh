@@ -214,14 +214,13 @@ function bootstrapCompiler {
       VERSION="$VERSION-$PACKAGE_DATE"
     fi
     ./bootstrap-compiler $VERSION
-    ./tmp/qx deploy --app-name=compiler $QX_COMPILE_ARGS
     popDir
     COMPILER_VERSION=$VERSION
     
     # Setup the compiler / working bin directory
     [[ ! -d $WORKING_ABS_DIR/bin ]] && mkdir -p $WORKING_ABS_DIR/bin
     rm -f $WORKING_ABS_DIR/bin/qx
-    ln -s ${REPO_ABS_DIRS[qooxdoo-compiler]}/bin/deploy/qx $WORKING_ABS_DIR/bin
+    ln -s ${REPO_ABS_DIRS[qooxdoo-compiler]}/bin/build/qx $WORKING_ABS_DIR/bin
 }
 bootstrapCompiler
 
@@ -325,6 +324,7 @@ publishFramework
 
 function publishCompiler {
     info "publish qooxdoo compiler"
+    pushDirSafe ${REPO_ABS_DIRS["qooxdoo-compiler"]}	
     npm --no-git-tag-version version $COMPILER_VERSION   # adapt version for compiler info
     verbose "new version $COMPILER_VERSION"
     mkdir -p $WORKING_ABS_DIR/deploy/compiler
