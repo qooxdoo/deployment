@@ -214,6 +214,7 @@ function bootstrapCompiler {
       VERSION="$VERSION-$PACKAGE_DATE"
     fi
     ./bootstrap-compiler $VERSION
+    ./tmp/qx deploy --app-name=compiler $QX_COMPILE_ARGS
     popDir
     COMPILER_VERSION=$VERSION
     
@@ -290,7 +291,7 @@ function publishFramework {
 
     verbose "publish @qooxdoo/server"
     mkdir -p $WORKING_ABS_DIR/deploy/server
-    $WORKING_ABS_DIR/bin/qx deploy --config-file=compile-server.json --out=$WORKING_ABS_DIR/deploy/server/lib --clean --verbose
+    $WORKING_ABS_DIR/bin/qx deploy --config-file=compile-server.json --out=$WORKING_ABS_DIR/deploy/server/lib --clean $QX_COMPILE_ARGS
     cp *.md          $WORKING_ABS_DIR/deploy/server
     cp LICENSE       $WORKING_ABS_DIR/deploy/server
     jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/server/Manifest.json
@@ -327,7 +328,7 @@ function publishCompiler {
     npm --no-git-tag-version version $COMPILER_VERSION   # adapt version for compiler info
     verbose "new version $COMPILER_VERSION"
     mkdir -p $WORKING_ABS_DIR/deploy/compiler
-    $WORKING_ABS_DIR/bin/qx deploy --out=$WORKING_ABS_DIR/deploy/compiler/lib --app-name=compiler --clean --verbose
+    $WORKING_ABS_DIR/bin/qx deploy --out=$WORKING_ABS_DIR/deploy/compiler/lib --app-name=compiler --clean $QX_COMPILE_ARGS
     cp *.md                 $WORKING_ABS_DIR/deploy/compiler
     cp LICENSE              $WORKING_ABS_DIR/deploy/compiler
     mkdir -p $WORKING_ABS_DIR/deploy/compiler/bin
