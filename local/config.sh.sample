@@ -1,0 +1,10 @@
+#
+# This file contains example local settings used by the deployer.sh script - copy it
+#  to a file called config.sh and edit to suit
+#
+
+# Example: If you want to use your own copy of the API viewer to test deployment, this is what you
+# could use:
+
+# REPO_DIRS[qxl.apiviewer]=../api-viewer
+

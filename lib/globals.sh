@@ -33,6 +33,11 @@ declare -A REPO_DIRS
 declare -A REPO_URLS
 
 #
+# REPO_BRANCHES is an associative array of GitHub repo branches; defaults to master
+#
+declare -A REPO_BRANCHES
+
+#
 # REPO_NPM_NAMES is an associative array of npmjs.com repo names, defaults to "@qooxdoo/REPO-NAME"
 #
 declare -A REPO_NPM_NAMES

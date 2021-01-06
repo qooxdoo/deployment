@@ -22,7 +22,17 @@ function checkoutRepo {
     if [[ ! -d $repoDir ]] ; then
         echo "Cloning $repoUrl ..."
         created=true
-        git clone $repoUrl $repoDir --depth 1
+        local branch=${REPO_BRANCHES[$repo]}
+        if [[ "$branch" != "" ]] ; then
+          git clone $repoUrl $repoDir
+          echo "Checking out branch $branch"
+          pushDirSafe $repoDir
+          git fetch origin
+          git checkout $branch
+          popDir
+        else
+          git clone $repoUrl $repoDir --depth 1
+        fi
     else
         if isWorking $repoDir ; then
             if [[ $PULL_ALL != 0 ]] ; then

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+set -x
 
 # Preset default command line args
 ANSWER_YES=0
@@ -9,6 +10,7 @@ RUN_TESTS=1
 VERBOSE=0
 QUIET=0
 USAGE=0
+PUBLISH=0
 NPM_COMMAND="publish --access public"
 
 # Directory that this script is in
@@ -18,8 +20,7 @@ DEPLOY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # Declare globals
 declare -A REPO_ABS_DIRS
 declare -A REPO_IS_WORKING
-QX_COMPILE_ARGS=
-KNOWN_GOOD_QX_CMD="npx qx"
+QX_COMPILE_ARGS=--block-global-framework
 
 
 # Load utility methods
@@ -37,6 +38,14 @@ KNOWN_GOOD_QX_CMD="npx qx"
 #
 while [[ $1 != "" ]] ; do
     case "$1" in
+        "--publish")
+            PUBLISH=1
+            ;;
+
+        "--no-publish")
+            PUBLISH=0
+            ;;
+            
         "--npm-pack")
             NPM_COMMAND="pack"
             ;;
@@ -104,7 +113,6 @@ if [[ $VERBOSE != 0 ]] ; then
 
     echo node version: $(node --version)
     echo npm version:  $(npm --version)
-    echo bootstrap qx: $KNOWN_GOOD_QX_CMD 
     echo -e "\e[39m"
 fi
 
@@ -135,7 +143,6 @@ fi
 # Initialise the working directory
 mkdir -p $WORKING_DIR
 WORKING_ABS_DIR=$(makeAbsolute $WORKING_DIR)
-export PATH=$WORKING_ABS_DIR/bin:$PATH
 verbose "WORKING_ABS_DIR=$WORKING_ABS_DIR"
 
 
@@ -205,7 +212,15 @@ function bootstrapCompiler {
 
     verbose "Building the compiler"
     pushDirSafe $compilerRepoDir
+<<<<<<< HEAD
     $KNOWN_GOOD_QX_CMD deploy $QX_COMPILE_ARGS --app-name=compiler
+=======
+    local VERSION=$(jq -M --raw-output '.info.version' Manifest.json)
+    if [[ "$VERSION" =~ (alpha|beta) ]]; then
+      VERSION="$VERSION-$PACKAGE_DATE"
+    fi
+    [[ ! -f ${REPO_ABS_DIRS[qooxdoo-compiler]}/bin/build/qx ]] && ./bootstrap-compiler $VERSION
+>>>>>>> 5f9104a... refactor
     popDir
     
     # Setup the compiler / working bin directory
@@ -292,7 +307,9 @@ function publishFramework {
     pushDirSafe $WORKING_ABS_DIR/deploy/server
     cp $DEPLOY_DIR/packages/server/package.json .
     npm version $VERSION
-    npm $NPM_COMMAND
+    if [[ $PUBLISH = 1 ]] ; then
+      npm $NPM_COMMAND
+    fi
     popDir
 
     verbose "publish @qooxdoo/framework"
@@ -300,7 +317,7 @@ function publishFramework {
     mkdir -p $WORKING_ABS_DIR/deploy/framework
     cp *.md          $WORKING_ABS_DIR/deploy/framework
     cp LICENSE       $WORKING_ABS_DIR/deploy/framework
-    jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/framework/Manifest.json
+    jq --arg version $VERSION '.info.version=$version' framework/Manifest.json > $WORKING_ABS_DIR/deploy/framework/Manifest.json
     mkdir -p $WORKING_ABS_DIR/deploy/framework/source
     cp -R framework/source/* $WORKING_ABS_DIR/deploy/framework/source
     mkdir -p $WORKING_ABS_DIR/deploy/framework/tool/data/cldr
@@ -309,7 +326,10 @@ function publishFramework {
     pushDirSafe $WORKING_ABS_DIR/deploy/framework
     cp $DEPLOY_DIR/packages/framework/package.json .
     npm version $VERSION
-    npm $NPM_COMMAND 
+    FRAMEWORK_VERSION=$VERSION
+    if [[ $PUBLISH = 1 ]] ; then
+      npm $NPM_COMMAND 
+    fi
     popDir
 
 }
@@ -338,8 +358,10 @@ function publishCompiler {
     > $WORKING_ABS_DIR/deploy/compiler/npm-shrinkwrap.json
     popDir
     pushDirSafe $WORKING_ABS_DIR/deploy/compiler
-    npm install @qooxdoo/framework
-    npm $NPM_COMMAND
+    if [[ $PUBLISH = 1 ]] ; then
+      npm install @qooxdoo/framework@$FRAMEWORK_VERSION
+      npm $NPM_COMMAND
+    fi
     popDir
 }
 publishCompiler
