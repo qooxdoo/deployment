@@ -172,6 +172,9 @@ for repo in "${!REPO_ENABLED[@]}" ; do
     ENABLED_REPOS="$ENABLED_REPOS $repo"
 done
 
+PACKAGE_DATE=$(date +%Y%m%d-%H%M)
+FRAMEWORK_VERSION=
+COMPILER_VERSION=
 
 #
 # Framework bootstrap
@@ -188,10 +191,9 @@ bootstrapFramework
 # Compiler bootstrap
 #
 function bootstrapCompiler {
+    info "Bootstrapping the compiler"
     checkoutRepo "qooxdoo-compiler"
     checkRepoNodeModules "qooxdoo-compiler"
-
-    info "Bootstrapping the compiler with qx version $($KNOWN_GOOD_QX_CMD --version)"
 
     local frameworkRepoDir=${REPO_ABS_DIRS["qooxdoo"]}
     local compilerRepoDir=${REPO_ABS_DIRS["qooxdoo-compiler"]}
@@ -218,16 +220,14 @@ function bootstrapCompiler {
     fi
     [[ ! -f ${REPO_ABS_DIRS[qooxdoo-compiler]}/bin/build/qx ]] && ./bootstrap-compiler $VERSION
     popDir
+    COMPILER_VERSION=$VERSION
     
     # Setup the compiler / working bin directory
     [[ ! -d $WORKING_ABS_DIR/bin ]] && mkdir -p $WORKING_ABS_DIR/bin
     rm -f $WORKING_ABS_DIR/bin/qx
-    ln -s ${REPO_ABS_DIRS[qooxdoo-compiler]}/bin/qx $WORKING_ABS_DIR/bin
+    ln -s ${REPO_ABS_DIRS[qooxdoo-compiler]}/bin/build/qx $WORKING_ABS_DIR/bin
 }
 bootstrapCompiler
-
-
-
 
 # Checkout any repos which we need
 for repo in $ENABLED_REPOS ; do
@@ -278,7 +278,7 @@ info "Bootstrap is resolved and repos are compiled"
 
 # fill .npmrc with access token
 echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN:-}" > ~/.npmrc
-PACKAGE_DATE=$(date +%Y%m%d-%H%M)
+
 
 [[ ! -d $WORKING_ABS_DIR/deploy ]] && mkdir -p $WORKING_ABS_DIR/deploy
 rm -fR $WORKING_ABS_DIR/deploy/*
@@ -295,7 +295,7 @@ function publishFramework {
 
     verbose "publish @qooxdoo/server"
     mkdir -p $WORKING_ABS_DIR/deploy/server
-    $WORKING_ABS_DIR/bin/qx deploy --config-file=compile-server.json --out=$WORKING_ABS_DIR/deploy/server/lib --clean --verbose
+    $WORKING_ABS_DIR/bin/qx deploy --config-file=compile-server.json --out=$WORKING_ABS_DIR/deploy/server/lib --clean $QX_COMPILE_ARGS
     cp *.md          $WORKING_ABS_DIR/deploy/server
     cp LICENSE       $WORKING_ABS_DIR/deploy/server
     jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/server/Manifest.json
@@ -333,21 +333,16 @@ publishFramework
 
 function publishCompiler {
     info "publish qooxdoo compiler"
-
-    pushDirSafe ${REPO_ABS_DIRS["qooxdoo-compiler"]}
-    local VERSION=$(jq -M --raw-output '.info.version' Manifest.json)
-    if [[ "$VERSION" =~ (alpha|beta) ]]; then
-      VERSION="$VERSION-$PACKAGE_DATE"
-    fi
-    npm --no-git-tag-version version $VERSION --no-git-tag-version    # adapt version for compiler info
-    verbose "new version $VERSION"
+    pushDirSafe ${REPO_ABS_DIRS["qooxdoo-compiler"]}	
+    npm --no-git-tag-version version $COMPILER_VERSION   # adapt version for compiler info
+    verbose "new version $COMPILER_VERSION"
     mkdir -p $WORKING_ABS_DIR/deploy/compiler
-    $WORKING_ABS_DIR/bin/qx deploy --out=$WORKING_ABS_DIR/deploy/compiler/lib --app-name=compiler --clean --verbose
+    $WORKING_ABS_DIR/bin/qx deploy --out=$WORKING_ABS_DIR/deploy/compiler/lib --app-name=compiler --clean $QX_COMPILE_ARGS
     cp *.md                 $WORKING_ABS_DIR/deploy/compiler
     cp LICENSE              $WORKING_ABS_DIR/deploy/compiler
     mkdir -p $WORKING_ABS_DIR/deploy/compiler/bin
     cp -R bin/*      $WORKING_ABS_DIR/deploy/compiler/bin
-    jq --arg version $VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/compiler/Manifest.json
+    jq --arg version $COMPILER_VERSION '.info.version=$version' Manifest.json > $WORKING_ABS_DIR/deploy/compiler/Manifest.json
     jq -M 'del(.devDependencies) | del(.scripts)' package.json \
     > $WORKING_ABS_DIR/deploy/compiler/package.json
     jq -M 'del(.dependencies["@qooxdoo/compiler"]) | del(.dependencies["tape"]) | del(.dependencies["source-map-support"])' npm-shrinkwrap.json \
