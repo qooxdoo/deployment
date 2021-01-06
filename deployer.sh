@@ -212,15 +212,11 @@ function bootstrapCompiler {
 
     verbose "Building the compiler"
     pushDirSafe $compilerRepoDir
-<<<<<<< HEAD
-    $KNOWN_GOOD_QX_CMD deploy $QX_COMPILE_ARGS --app-name=compiler
-=======
     local VERSION=$(jq -M --raw-output '.info.version' Manifest.json)
     if [[ "$VERSION" =~ (alpha|beta) ]]; then
       VERSION="$VERSION-$PACKAGE_DATE"
     fi
     [[ ! -f ${REPO_ABS_DIRS[qooxdoo-compiler]}/bin/build/qx ]] && ./bootstrap-compiler $VERSION
->>>>>>> 5f9104a... refactor
     popDir
     
     # Setup the compiler / working bin directory
