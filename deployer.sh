@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-set -x
+#set -x
 
 # Preset default command line args
 ANSWER_YES=0
@@ -89,6 +89,7 @@ done
 if [[ $USAGE != 0 ]] ; then
     echo "Usage: $0 [options]"
     echo "where options are:"
+    echo "  --publish                   - do the publishing"
     echo "  --npm-pack                  - use npm pack instead of npm publish"
     echo "  --enable-repos [list]       - exhaustive list of repos to enable, space separated in quotes"
     echo "  --source                    - compile source targets instead of build"
@@ -110,6 +111,7 @@ if [[ $VERBOSE != 0 ]] ; then
     echo "QUIET=$QUIET"
     echo "USAGE=$USAGE"
     echo "NPM_COMMAND=$NPM_COMMAND"
+    echo "PUBLISH=$PUBLISH"
 
     echo node version: $(node --version)
     echo npm version:  $(npm --version)
@@ -218,7 +220,7 @@ function bootstrapCompiler {
     if [[ "$VERSION" =~ (alpha|beta) ]]; then
       VERSION="$VERSION-$PACKAGE_DATE"
     fi
-    [[ ! -f ${REPO_ABS_DIRS[qooxdoo-compiler]}/bin/build/qx ]] && ./bootstrap-compiler $VERSION
+    [[ ! -f ${REPO_ABS_DIRS[qooxdoo-compiler]}/compiled/node/build/compiler/index.js ]] && ./bootstrap-compiler $VERSION
     popDir
     COMPILER_VERSION=$VERSION
     
