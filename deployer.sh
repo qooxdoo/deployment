@@ -20,7 +20,7 @@ DEPLOY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # Declare globals
 declare -A REPO_ABS_DIRS
 declare -A REPO_IS_WORKING
-QX_COMPILE_ARGS=--block-global-framework
+QX_COMPILE_ARGS=
 
 
 # Load utility methods
@@ -259,6 +259,10 @@ for repo in $ENABLED_REPOS ; do
     done
     popDir
 done
+
+
+# Make sure that we're using the framework repo for everything that we do 
+$WORKING_ABS_DIR/bin/qx config set qx.library "${REPO_ABS_DIRS[qooxdoo]}/framework"
 
 
 # Compile and test repos
