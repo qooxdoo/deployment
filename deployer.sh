@@ -336,6 +336,8 @@ function publishFramework {
 
 }
 publishFramework
+# wait a minute for npm publish to work
+sleep 60
 
 function publishCompiler {
     info "publish qooxdoo compiler"
