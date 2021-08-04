@@ -166,6 +166,7 @@ fi
 # The framework and the compiler are always enabled
 REPO_ENABLED[qooxdoo]=1
 REPO_ENABLED[qooxdoo-compiler]=1
+REPO_BRANCHES[qooxdoo]="latest"
 
 
 # Handy list of enabled repos
