@@ -343,8 +343,8 @@ sleep 600
 function publishCompiler {
     info "publish qooxdoo compiler"
     pushDirSafe ${REPO_ABS_DIRS["qooxdoo-compiler"]}	
-    npm --no-git-tag-version version $COMPILER_VERSION   # adapt version for compiler info
     verbose "new version $COMPILER_VERSION"
+    npm --no-git-tag-version --allow-same-version version $COMPILER_VERSION   # adapt version for compiler info
     mkdir -p $WORKING_ABS_DIR/deploy/compiler
     $WORKING_ABS_DIR/bin/qx deploy --out=$WORKING_ABS_DIR/deploy/compiler/lib --app-name=compiler --clean $QX_COMPILE_ARGS
     cp *.md                 $WORKING_ABS_DIR/deploy/compiler
