@@ -338,7 +338,9 @@ function publishFramework {
 }
 publishFramework
 # wait a minute for npm publish to work
-sleep 600
+if [[ $PUBLISH = 1 ]] ; then
+   sleep 600
+fi
 
 function publishCompiler {
     info "publish qooxdoo compiler"
